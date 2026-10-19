@@ -142,16 +142,6 @@ Full permissions matrix: [docs/01-requirements/roles-permissions-matrix.md](./do
 
 ---
 
-## Team
-
-| Name | Role | GitHub |
-|------|------|--------|
-| — | Backend Lead | @placeholder |
-| — | Frontend Lead | @placeholder |
-| — | DevOps / Infra | @placeholder |
-
----
-
 ## Contributing
 
 All contributions follow the branching strategy and commit conventions described in [CONTRIBUTING.md](./CONTRIBUTING.md).
