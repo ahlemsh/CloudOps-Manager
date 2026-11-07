@@ -149,6 +149,4 @@ Notable changes per release are tracked in [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
-## License
 
-[MIT](./LICENSE) © 2024 CloudOps Manager Contributors
