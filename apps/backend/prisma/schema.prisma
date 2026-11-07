@@ -1,0 +1,250 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// enumerations
+
+enum RoleName {
+  ADMIN
+  DEVOPS
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  SUSPENDED
+}
+
+enum EnvironmentType {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+}
+
+enum ServerStatus {
+  PROVISIONING
+  RUNNING
+  STOPPED
+  MAINTENANCE
+  TERMINATED
+}
+
+enum AppStatus {
+  DEPLOYING
+  RUNNING
+  STOPPED
+  FAILED
+  ROLLING_BACK
+}
+
+enum MetricType {
+  CPU
+  RAM
+  DISK
+  NETWORK_IN
+  NETWORK_OUT
+}
+
+enum AlertOperator {
+  GT
+  GTE
+  LT
+  LTE
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  TRIGGERED
+  ACKNOWLEDGED
+  RESOLVED
+  CLOSED
+  ESCALATED
+}
+
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  first_name    String
+  last_name     String
+  role          RoleName @default(VIEWER)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  owned_projects   Project[]       @relation("ProjectOwner")
+  project_members  ProjectMember[]
+  acknowledged_alerts Alert[]      @relation("AlertAcknowledger")
+
+  @@map("users")
+}
+
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  owner_id    String
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  // Relations
+  owner        User            @relation("ProjectOwner", fields: [owner_id], references: [id])
+  members      ProjectMember[]
+  environments Environment[]
+
+  @@map("projects")
+}
+
+
+model ProjectMember {
+  id          String   @id @default(uuid())
+  project_id  String
+  user_id     String
+  assigned_at DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, user_id])
+  @@map("project_members")
+}
+
+
+model Environment {
+  id         String          @id @default(uuid())
+  name       String
+  type       EnvironmentType
+  project_id String
+  created_at DateTime        @default(now())
+
+  // Relations
+  project      Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  servers      Server[]
+  applications Application[]
+
+  @@map("environments")
+}
+
+
+model Server {
+  id             String       @id @default(uuid())
+  name           String
+  provider       String
+  region         String
+  ip_address     String
+  cpu_cores      Int
+  ram_gb         Float
+  storage_gb     Float
+  status         ServerStatus @default(PROVISIONING)
+  environment_id String
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  // Relations
+  environment  Environment @relation(fields: [environment_id], references: [id], onDelete: Cascade)
+  applications Application[]
+  metrics      Metric[]
+  alert_rules  AlertRule[]
+  alerts       Alert[]
+
+  @@map("servers")
+}
+
+
+model Application {
+  id             String    @id @default(uuid())
+  name           String
+  version        String
+  status         AppStatus @default(DEPLOYING)
+  server_id      String
+  environment_id String
+  deployed_at    DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  // Relations
+  server      Server      @relation(fields: [server_id], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [environment_id], references: [id])
+
+  @@map("applications")
+}
+
+
+
+model Metric {
+  id              String   @id @default(uuid())
+  server_id       String
+  cpu_percent     Float
+  ram_percent     Float
+  disk_percent    Float
+  network_in_kbps Float
+  network_out_kbps Float
+  recorded_at     DateTime @default(now())
+
+  // Relations
+  server Server @relation(fields: [server_id], references: [id], onDelete: Cascade)
+
+  // Index for time-series queries
+  @@index([server_id, recorded_at(sort: Desc)])
+  @@map("metrics")
+}
+
+
+
+model AlertRule {
+  id          String        @id @default(uuid())
+  name        String
+  server_id   String
+  metric_type MetricType
+  operator    AlertOperator
+  threshold   Float
+  severity    AlertSeverity
+  is_active   Boolean       @default(true)
+  created_at  DateTime      @default(now())
+
+  // Relations
+  server Server  @relation(fields: [server_id], references: [id], onDelete: Cascade)
+  alerts Alert[]
+
+  @@map("alert_rules")
+}
+
+
+
+model Alert {
+  id               String        @id @default(uuid())
+  alert_rule_id    String
+  server_id        String
+  status           AlertStatus   @default(TRIGGERED)
+  severity         AlertSeverity
+  message          String
+  acknowledged_by  String?
+  triggered_at     DateTime      @default(now())
+  acknowledged_at  DateTime?
+  resolved_at      DateTime?
+
+  // Relations
+  alert_rule      AlertRule @relation(fields: [alert_rule_id], references: [id], onDelete: Cascade)
+  server          Server    @relation(fields: [server_id], references: [id], onDelete: Cascade)
+  acknowledger    User?     @relation("AlertAcknowledger", fields: [acknowledged_by], references: [id])
+
+  @@index([server_id, status])
+  @@index([triggered_at(sort: Desc)])
+  @@map("alerts")
+}
