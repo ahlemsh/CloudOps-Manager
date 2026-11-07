@@ -13,6 +13,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ApplicationsModule } from './modules/applications/applications.module';
     AlertsModule,
     DashboardModule,
     ApplicationsModule,
+    MetricsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -175,4 +175,78 @@ export class AlertsService {
       },
     });
   }
+
+  // ─── Alert Evaluation (appelé par MetricsSimulator après chaque mesure) ──────
+
+  /**
+   * Évalue toutes les AlertRule actives d'un serveur contre les valeurs mesurées.
+   * Crée une alerte si le seuil est franchi, sans dupliquer une alerte déjà ouverte
+   * (statut différent de RESOLVED et CLOSED).
+   *
+   * @param metric - Objet contenant server_id et les 5 valeurs mesurées
+   */
+  async evaluate(metric: {
+    server_id: string;
+    cpu_percent: number;
+    ram_percent: number;
+    disk_percent: number;
+    network_in_kbps: number;
+    network_out_kbps: number;
+  }): Promise<void> {
+    // Charge toutes les règles actives pour ce serveur
+    const rules = await this.prisma.alertRule.findMany({
+      where: { server_id: metric.server_id, is_active: true },
+    });
+
+    // Mappe MetricType (enum Prisma) → valeur mesurée correspondante
+    const valueMap: Record<string, number> = {
+      CPU:         metric.cpu_percent,
+      RAM:         metric.ram_percent,
+      DISK:        metric.disk_percent,
+      NETWORK_IN:  metric.network_in_kbps,
+      NETWORK_OUT: metric.network_out_kbps,
+    };
+
+    for (const rule of rules) {
+      const measured = valueMap[rule.metric_type];
+      if (measured === undefined) continue;
+
+      // Number() coerce Decimal (Prisma) → number natif JS
+      const threshold = Number(rule.threshold);
+
+      // Évalue l'opérateur (AlertOperator enum : GT, GTE, LT, LTE)
+      const triggered =
+        rule.operator === 'GT'  ? measured >  threshold :
+        rule.operator === 'GTE' ? measured >= threshold :
+        rule.operator === 'LT'  ? measured <  threshold :
+        rule.operator === 'LTE' ? measured <= threshold :
+        false;
+
+      if (!triggered) continue;
+
+      // Déduplication : on ne recrée pas d'alerte si une alerte non-fermée
+      // (TRIGGERED, ACKNOWLEDGED, ESCALATED) existe déjà pour cette règle.
+      const existing = await this.prisma.alert.findFirst({
+        where: {
+          alert_rule_id: rule.id,
+          server_id:     metric.server_id,
+          status: {
+            notIn: [AlertStatus.RESOLVED, AlertStatus.CLOSED],
+          },
+        },
+      });
+      if (existing) continue;
+
+      // Crée l'alerte avec le message auto-descriptif
+      await this.prisma.alert.create({
+        data: {
+          alert_rule_id: rule.id,
+          server_id:     metric.server_id,
+          severity:      rule.severity,
+          status:        AlertStatus.TRIGGERED,
+          message: `[${rule.metric_type}] valeur ${measured.toFixed(1)} ${rule.operator} seuil ${threshold} — règle « ${rule.name} »`,
+        },
+      });
+    }
+  }
 }
