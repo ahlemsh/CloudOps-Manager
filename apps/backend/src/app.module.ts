@@ -9,6 +9,8 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { AlertsModule } from './modules/alerts/alerts.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     PrismaModule,
     AuthModule,
     UsersModule,
+    AlertsModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
