@@ -1,3 +1,4 @@
+import { ServersModule } from './modules/servers/servers.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -26,6 +27,7 @@ import { MetricsModule } from './modules/metrics/metrics.module';
     DashboardModule,
     ApplicationsModule,
     MetricsModule,
+    ServersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
