@@ -15,6 +15,7 @@ import { AlertsModule } from './modules/alerts/alerts.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MetricsModule } from './modules/metrics/metrics.module';
     ApplicationsModule,
     MetricsModule,
     ServersModule,
+    ProjectsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
