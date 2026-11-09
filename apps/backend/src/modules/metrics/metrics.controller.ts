@@ -17,7 +17,7 @@ import { AvailabilityDto } from './dto/availability.dto';
  * Préfixe : /servers/:id/... (imbriqué sous la ressource Server)
  */
 @ApiTags('Metrics')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @Controller('servers/:id')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
