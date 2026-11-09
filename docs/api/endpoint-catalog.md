@@ -82,16 +82,22 @@ Full Swagger/OpenAPI documentation will be available at `/api/docs` once the bac
 
 ---
 
-## Projects (6 endpoints)
+## Projects (12 endpoints)
 
 | Method | Path | Description | Role | Query Params |
 |--------|------|-------------|------|--------------|
-| `GET` | `/projects` | List projects with pagination and filters | Any authenticated | `page`, `limit`, `search`, `status` |
-| `POST` | `/projects` | Create a new project | Admin, DevOps | — |
-| `GET` | `/projects/:id` | Get project detail with environments and member count | Any authenticated | — |
+| `GET` | `/projects` | List projects with pagination and filters; Viewers see only projects they own or are a member of | Any authenticated | `page`, `limit`, `search`, `status` |
+| `POST` | `/projects` | Create a new project (owner_id = authenticated user) | Admin, DevOps | — |
+| `GET` | `/projects/:id` | Get project detail with environments and member count; Viewers: 403 if not owner/member | Any authenticated | — |
 | `PATCH` | `/projects/:id` | Update project name, description, or status | Admin, DevOps | — |
-| `DELETE` | `/projects/:id` | Delete a project (and cascade environments) | Admin | — |
-| `POST` | `/projects/:id/members` | Add a user to a project as a member | Admin, DevOps | — |
+| `DELETE` | `/projects/:id` | Delete a project (Admin only) | Admin | — |
+| `GET` | `/projects/:id/members` | List project members (id, email, name, role, assignedAt — never password_hash) | Any authenticated | — |
+| `POST` | `/projects/:id/members` | Add a user to a project; user must exist and be active; 409 if already a member | Admin, DevOps | — |
+| `DELETE` | `/projects/:id/members/:userId` | Remove a member from a project | Admin, DevOps | — |
+| `GET` | `/projects/:id/environments` | List environments for a project (includes server count) | Any authenticated | — |
+| `POST` | `/projects/:id/environments` | Create an environment for a project | Admin, DevOps | — |
+| `PATCH` | `/projects/:id/environments/:envId` | Update an environment; 404 if envId not in project | Admin, DevOps | — |
+| `DELETE` | `/projects/:id/environments/:envId` | Delete an environment; 409 if it still contains servers | Admin, DevOps | — |
 
 ### POST /projects/:id/members
 **Request body:**
@@ -102,6 +108,13 @@ Full Swagger/OpenAPI documentation will be available at `/api/docs` once the bac
 ```json
 { "id": "uuid", "projectId": "uuid", "userId": "uuid", "assignedAt": "2024-01-01T00:00:00Z" }
 ```
+
+### POST /projects/:id/environments
+**Request body:**
+```json
+{ "name": "production", "type": "PRODUCTION" }
+```
+**Response 201:** Full environment object.
 
 ---
 
@@ -281,13 +294,13 @@ Full Swagger/OpenAPI documentation will be available at `/api/docs` once the bac
 
 ---
 
-## Total: 29 documented endpoints
+## Total: 35 documented endpoints
 
 | Module | Count |
 |--------|-------|
 | Authentication | 5 |
 | Users | 4 |
-| Projects | 6 |
+| Projects | 12 |
 | Servers | 6 |
 | Applications | 5 |
 | Metrics | 3 |
@@ -295,4 +308,4 @@ Full Swagger/OpenAPI documentation will be available at `/api/docs` once the bac
 | Alerts | 4 |
 | Dashboard | 2 |
 | Health | 1 |
-| **Total** | **39** |
+| **Total** | **45** |
