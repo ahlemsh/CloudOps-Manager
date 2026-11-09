@@ -26,7 +26,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RoleName } from '@prisma/client';
 
 @ApiTags('Alerts')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @Controller('alerts')
 export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}

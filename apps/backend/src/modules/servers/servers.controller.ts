@@ -26,7 +26,7 @@ import { QueryServersDto } from './dto/query-servers.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 @ApiTags('Servers')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @Controller('servers')
 export class ServersController {
   constructor(private readonly serversService: ServersService) {}

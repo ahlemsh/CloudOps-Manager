@@ -3,7 +3,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@ne
 import { DashboardService } from './dashboard.service';
 
 @ApiTags('Dashboard')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
