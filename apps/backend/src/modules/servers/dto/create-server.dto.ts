@@ -66,7 +66,7 @@ export class CreateServerDto {
   @IsOptional()
   status?: ServerStatus;
 
-  @ApiProperty({ example: 'uuid-de-l-environnement', description: 'ID de l\'environnement' })
+  @ApiProperty({ example: '05f46872-7310-4404-ac2d-48efd94639a8', description: "UUID de l'environnement" })
   @IsUUID()
   @IsNotEmpty()
   environmentId: string;

@@ -17,9 +17,6 @@ export class ServersService {
     private readonly metricsService: MetricsService,
   ) {}
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
-
-  /** Vérifie qu'un environnement existe, lance NotFoundException sinon. */
   private async assertEnvironmentExists(environmentId: string): Promise<void> {
     const env = await this.prisma.environment.findUnique({
       where: { id: environmentId },
@@ -30,12 +27,6 @@ export class ServersService {
     }
   }
 
-  // ─── CRUD ────────────────────────────────────────────────────────────────────
-
-  /**
-   * Liste paginée avec filtres optionnels :
-   * search (name ou ip_address), status, provider, region, environmentId
-   */
   async findAll(query: QueryServersDto) {
     const { page = 1, limit = 20, search, status, provider, region, environmentId } = query;
     const skip = (page - 1) * limit;
@@ -69,19 +60,10 @@ export class ServersService {
 
     return {
       data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
-  /**
-   * Détail d'un serveur : environnement (+ projet), applications hébergées
-   * et dernière mesure (latest_metric, null si le simulateur n'a pas encore tourné).
-   */
   async findOne(id: string) {
     const server = await this.prisma.server.findUnique({
       where: { id },
@@ -102,15 +84,12 @@ export class ServersService {
       },
     });
 
-    if (!server) {
-      throw new NotFoundException(`Server with id ${id} not found`);
-    }
+    if (!server) throw new NotFoundException(`Server with id ${id} not found`);
 
     const { metrics, ...rest } = server;
     return { ...rest, latest_metric: metrics[0] ?? null };
   }
 
-  /** Crée un serveur après validation de l'environnement. */
   async create(dto: CreateServerDto) {
     await this.assertEnvironmentExists(dto.environmentId);
 
@@ -123,7 +102,7 @@ export class ServersService {
         cpu_cores: dto.cpuCores,
         ram_gb: dto.ramGb,
         storage_gb: dto.storageGb,
-        status: dto.status, // undefined → Prisma applique @default (PROVISIONING)
+        status: dto.status,
         environment_id: dto.environmentId,
       },
       include: {
@@ -132,18 +111,12 @@ export class ServersService {
     });
   }
 
-  /**
-   * Met à jour un serveur (champs partiels).
-   * Règle de cycle de vie : un serveur TERMINATED ne peut plus changer de statut.
-   */
   async update(id: string, dto: UpdateServerDto) {
     const existing = await this.prisma.server.findUnique({
       where: { id },
       select: { id: true, status: true },
     });
-    if (!existing) {
-      throw new NotFoundException(`Server with id ${id} not found`);
-    }
+    if (!existing) throw new NotFoundException(`Server with id ${id} not found`);
 
     if (
       dto.status !== undefined &&
@@ -176,36 +149,23 @@ export class ServersService {
     });
   }
 
-  /**
-   * Supprime un serveur.
-   * ATTENTION : onDelete: Cascade dans schema.prisma → supprime aussi ses
-   * applications, métriques, règles d'alerte et alertes.
-   */
   async remove(id: string) {
     const existing = await this.prisma.server.findUnique({
       where: { id },
       select: { id: true },
     });
-    if (!existing) {
-      throw new NotFoundException(`Server with id ${id} not found`);
-    }
+    if (!existing) throw new NotFoundException(`Server with id ${id} not found`);
 
     await this.prisma.server.delete({ where: { id } });
     return { message: `Server ${id} deleted successfully` };
   }
 
-  /**
-   * Statut courant + résumé de disponibilité sur les dernières 24 h.
-   * La disponibilité est calculée par MetricsService (règle UP : cpu < 95 %).
-   */
   async getStatus(id: string) {
     const server = await this.prisma.server.findUnique({
       where: { id },
       select: { id: true, name: true, status: true, created_at: true, updated_at: true },
     });
-    if (!server) {
-      throw new NotFoundException(`Server with id ${id} not found`);
-    }
+    if (!server) throw new NotFoundException(`Server with id ${id} not found`);
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

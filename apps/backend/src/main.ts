@@ -35,8 +35,13 @@ async function bootstrap() {
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' },
       'access-token',
     )
-    .addTag('Auth', 'Authentication endpoints')
-    .addTag('Users', 'User management')
+    .addTag('Auth', 'Login, register, JWT refresh, logout')
+    .addTag('Users', 'CRUD utilisateurs et gestion des rôles')
+    .addTag('Servers', 'Enregistrement et gestion des serveurs cloud')
+    .addTag('Applications', 'Déploiement et suivi des applications')
+    .addTag('Metrics', 'Historique des métriques et disponibilité')
+    .addTag('Alerts', "Règles d'alerte et gestion des incidents")
+    .addTag('Dashboard', 'Vue globale et résumé de la plateforme')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

@@ -35,44 +35,31 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  // ─── GET /projects ────────────────────────────────────────────────────────
   @Get()
   @ApiOperation({ summary: 'List projects (all authenticated roles; visibility rules apply)' })
   @ApiResponse({ status: 200, description: 'Paginated list: { data, meta }' })
-  findAll(
-    @Query() query: QueryProjectsDto,
-    @CurrentUser() user: any,
-  ) {
+  findAll(@Query() query: QueryProjectsDto, @CurrentUser() user: any) {
     return this.projectsService.findAll(query, user);
   }
 
-  // ─── POST /projects ───────────────────────────────────────────────────────
   @Post()
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiOperation({ summary: 'Create a project (ADMIN, DEVOPS)' })
   @ApiResponse({ status: 201, description: 'Project created' })
-  create(
-    @Body() dto: CreateProjectDto,
-    @CurrentUser() user: any,
-  ) {
+  create(@Body() dto: CreateProjectDto, @CurrentUser() user: any) {
     return this.projectsService.create(dto, user);
   }
 
-  // ─── GET /projects/:id ────────────────────────────────────────────────────
   @Get(':id')
   @ApiParam({ name: 'id', description: 'Project UUID' })
   @ApiOperation({ summary: 'Get project details with environments and member count' })
   @ApiResponse({ status: 200, description: 'Project found' })
   @ApiResponse({ status: 403, description: 'Forbidden (Viewer not owner/member)' })
   @ApiResponse({ status: 404, description: 'Project not found' })
-  findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
-  ) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.projectsService.findOne(id, user);
   }
 
-  // ─── PATCH /projects/:id ──────────────────────────────────────────────────
   @Patch(':id')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiParam({ name: 'id', description: 'Project UUID' })
@@ -80,15 +67,10 @@ export class ProjectsController {
   @ApiResponse({ status: 200, description: 'Project updated' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Project not found' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateProjectDto,
-    @CurrentUser() user: any,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProjectDto, @CurrentUser() user: any) {
     return this.projectsService.update(id, dto, user);
   }
 
-  // ─── DELETE /projects/:id ─────────────────────────────────────────────────
   @Delete(':id')
   @Roles(RoleName.ADMIN)
   @HttpCode(HttpStatus.OK)
@@ -100,19 +82,14 @@ export class ProjectsController {
     return this.projectsService.remove(id);
   }
 
-  // ─── GET /projects/:id/members ────────────────────────────────────────────
   @Get(':id/members')
   @ApiParam({ name: 'id', description: 'Project UUID' })
-  @ApiOperation({ summary: 'List project members (never returns password_hash)' })
+  @ApiOperation({ summary: 'List project members' })
   @ApiResponse({ status: 200, description: 'Member list' })
-  getMembers(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
-  ) {
+  getMembers(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.projectsService.getMembers(id, user);
   }
 
-  // ─── POST /projects/:id/members ───────────────────────────────────────────
   @Post(':id/members')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiParam({ name: 'id', description: 'Project UUID' })
@@ -120,15 +97,10 @@ export class ProjectsController {
   @ApiResponse({ status: 201, description: 'Member added' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   @ApiResponse({ status: 409, description: 'User is already a member' })
-  addMember(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddMemberDto,
-    @CurrentUser() user: any,
-  ) {
+  addMember(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddMemberDto, @CurrentUser() user: any) {
     return this.projectsService.addMember(id, dto, user);
   }
 
-  // ─── DELETE /projects/:id/members/:userId ─────────────────────────────────
   @Delete(':id/members/:userId')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @HttpCode(HttpStatus.OK)
@@ -145,19 +117,14 @@ export class ProjectsController {
     return this.projectsService.removeMember(id, userId, user);
   }
 
-  // ─── GET /projects/:id/environments ──────────────────────────────────────
   @Get(':id/environments')
   @ApiParam({ name: 'id', description: 'Project UUID' })
   @ApiOperation({ summary: 'List environments for a project (includes server count)' })
   @ApiResponse({ status: 200, description: 'Environment list with _count.servers' })
-  getEnvironments(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: any,
-  ) {
+  getEnvironments(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
     return this.projectsService.getEnvironments(id, user);
   }
 
-  // ─── POST /projects/:id/environments ──────────────────────────────────────
   @Post(':id/environments')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiParam({ name: 'id', description: 'Project UUID' })
@@ -171,7 +138,6 @@ export class ProjectsController {
     return this.projectsService.createEnvironment(id, dto, user);
   }
 
-  // ─── PATCH /projects/:id/environments/:envId ──────────────────────────────
   @Patch(':id/environments/:envId')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiParam({ name: 'id', description: 'Project UUID' })
@@ -188,7 +154,6 @@ export class ProjectsController {
     return this.projectsService.updateEnvironment(id, envId, dto, user);
   }
 
-  // ─── DELETE /projects/:id/environments/:envId ─────────────────────────────
   @Delete(':id/environments/:envId')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @HttpCode(HttpStatus.OK)

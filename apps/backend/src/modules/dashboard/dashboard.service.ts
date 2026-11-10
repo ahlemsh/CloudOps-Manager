@@ -7,7 +7,6 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary() {
-    // Run all counts in parallel for performance
     const [
       totalServers,
       runningServers,
@@ -24,9 +23,7 @@ export class DashboardService {
       this.prisma.application.count(),
       this.prisma.application.count({ where: { status: AppStatus.RUNNING } }),
       this.prisma.alert.count({
-        where: {
-          status: { in: [AlertStatus.TRIGGERED, AlertStatus.ESCALATED] },
-        },
+        where: { status: { in: [AlertStatus.TRIGGERED, AlertStatus.ESCALATED] } },
       }),
       this.prisma.alert.count({
         where: {
@@ -37,7 +34,6 @@ export class DashboardService {
       this.prisma.project.count(),
     ]);
 
-    // Recent alerts (last 5)
     const recentAlerts = await this.prisma.alert.findMany({
       where: {
         status: { in: [AlertStatus.TRIGGERED, AlertStatus.ESCALATED, AlertStatus.ACKNOWLEDGED] },
@@ -50,13 +46,11 @@ export class DashboardService {
       take: 5,
     });
 
-    // Server status distribution
     const serverStatusCounts = await this.prisma.server.groupBy({
       by: ['status'],
       _count: { status: true },
     });
 
-    // Application status distribution
     const appStatusCounts = await this.prisma.application.groupBy({
       by: ['status'],
       _count: { status: true },
@@ -80,14 +74,8 @@ export class DashboardService {
           count: a._count.status,
         })),
       },
-      alerts: {
-        active: activeAlerts,
-        critical: criticalAlerts,
-        recent: recentAlerts,
-      },
-      projects: {
-        total: totalProjects,
-      },
+      alerts: { active: activeAlerts, critical: criticalAlerts, recent: recentAlerts },
+      projects: { total: totalProjects },
       generatedAt: new Date(),
     };
   }
@@ -95,20 +83,16 @@ export class DashboardService {
   async getMetrics(serverId?: string, limit = 50) {
     const where = serverId ? { server_id: serverId } : {};
 
-    // Get latest metrics per server (or for a specific server)
     if (serverId) {
       const metrics = await this.prisma.metric.findMany({
         where,
         orderBy: { recorded_at: 'desc' },
         take: limit,
-        include: {
-          server: { select: { id: true, name: true } },
-        },
+        include: { server: { select: { id: true, name: true } } },
       });
       return { data: metrics };
     }
 
-    // For all servers: get the latest metric per server
     const servers = await this.prisma.server.findMany({
       where: { status: ServerStatus.RUNNING },
       select: { id: true, name: true, provider: true, region: true },

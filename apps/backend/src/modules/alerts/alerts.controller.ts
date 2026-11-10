@@ -31,8 +31,6 @@ import { RoleName } from '@prisma/client';
 export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
 
-  // ─── Alert Rules ────────────────────────────────────────────────────────────
-
   @Post('rules')
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiOperation({ summary: 'Create a new alert rule for a server' })
@@ -59,10 +57,7 @@ export class AlertsController {
   @Roles(RoleName.ADMIN, RoleName.DEVOPS)
   @ApiOperation({ summary: 'Update an alert rule' })
   @ApiParam({ name: 'id', description: 'Alert rule UUID' })
-  updateAlertRule(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateAlertRuleDto,
-  ) {
+  updateAlertRule(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateAlertRuleDto) {
     return this.alertsService.updateAlertRule(id, dto);
   }
 
@@ -73,8 +68,6 @@ export class AlertsController {
   removeAlertRule(@Param('id', ParseUUIDPipe) id: string) {
     return this.alertsService.removeAlertRule(id);
   }
-
-  // ─── Alerts ─────────────────────────────────────────────────────────────────
 
   @Get()
   @ApiOperation({ summary: 'Get all alerts with filters and pagination' })
